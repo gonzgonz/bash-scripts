@@ -1,0 +1,61 @@
+# a check using ifdata for nagios plugins
+# written by Gonzalo Arce
+#!/bin/bash
+
+# Display an error message if no argument is provided
+if [ "$#" -ne 1 ]; then
+        echo "No, no. Esto es así:  ./check_ifdata [nombre de interfaz]"
+        exit 1
+fi
+
+# Program location
+IFDATA='/usr/bin/ifdata'
+
+# Interface to check on (you must provide it as an argument for the command) 
+IF=$1
+
+# now, to get the data we will work with these variables
+OUT_ERRORS=`$IFDATA -soe $IF`
+OUT_DROPS=`$IFDATA -sod $IF`
+OUT_FIFO_OVERRUNS=`$IFDATA -sof $IF`
+OUT_COLLISIONS=`$IFDATA -sox $IF`
+OUT_CARRIER_LOSS=`$IFDATA -soc $IF`
+STATUS="out errors: $OUT_ERRORS out drops: $OUT_DROPS out fifo overruns: $OUT_FIFO_OVERRUNS out collisions: $OUT_COLLISIONS out carrier loss: $OUT_CARRIER_LOSS"
+
+# get $RESULT
+RESULT=0
+
+for i in $OUT_ERRORS $OUT_DROPS $OUT_FIFO_OVERRUNS $OUT_COLLISIONS $OUT_CARRIER_LOSS; do
+         if [ $i -gt 0 ]; then
+                 RESULT=`expr $RESULT + 1`
+         fi
+done
+
+
+# status codes for nagios
+
+# STATUS OK
+if [ $RESULT -eq 0 ]; then
+  MSG="Everything is ok. No errors were found on the interface."
+  EXITSTATUS=0       
+
+
+# STATUS WARNING
+elif [ $RESULT -eq 1 ]; then
+  MSG="Some errors were found on the interface, please check."
+  EXITSTATUS=1
+
+else
+
+# STATUS CRITICAL
+ if [ $RESULT -gt 1 ]; then
+  MSG="Lots of interface errors, please check immediately."
+  EXITSTATUS=2
+ fi
+fi
+
+# final message for stdout
+echo "$MSG $STATUS"
+
+# retval for nagios
+exit $EXITSTATUS

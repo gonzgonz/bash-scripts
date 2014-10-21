@@ -1,0 +1,96 @@
+# check_iface 1.0 
+# a check using ifdata (or ifconfig) for nagios plugins
+# written by Gonzalo Arce
+#!/bin/bash
+
+# Display an error message if no argument is provided
+if [ "$#" -ne 1 ]; then
+        echo "You must supply the interface name as an argument:  ./check_iface [interface name]"
+        exit 3
+fi
+
+# Program location
+IFDATA='/usr/bin/ifdata'
+IFCONFIG='/sbin/ifconfig'
+# Interface to check on (you must provide it as an argument for the command) 
+IF=$1
+
+
+# Get the values. There are two methods to do this, by default, the script will try to use ifdata, but if it doesn't succeed it will use ifconfig instead.
+getValues() {
+	#echo "DEBUG: looking for errors on iface $1"
+
+# ifdata method
+if [ -x $IFDATA ]; then
+	export varnumber=0
+        for i in `$IFDATA -sie $IF` `$IFDATA -sid $IF` `$IFDATA -sif $IF` `$IFDATA -sic $IF`; do
+		IN_ERR[$varnumber]=`echo $i`
+		varnumber=`expr $varnumber + 1`
+	done 
+
+	export varnumber=0
+	for i in `$IFDATA -soe $IF` `$IFDATA -sod $IF` `$IFDATA -sof $IF` `$IFDATA -soc $IF` `$IFDATA -sox $IF`; do
+        	OUT_ERR[$varnumber]=`echo $i`
+              	varnumber=`expr $varnumber + 1`
+	done
+
+# ifconfig method        
+elif [ -x $IFCONFIG ]; then
+	export varnumber=0
+	for i in `$IFCONFIG $IF | grep -v "inet6" | sed '4!d' | egrep -o "errors:.*"`; do
+		IN_ERR[$varnumber]=`echo $i | cut -d ":" -f 2`
+                varnumber=`expr $varnumber + 1`
+	done
+
+	export varnumber=0
+	for i in `$IFCONFIG $IF | grep -v "inet6" | sed '5!d' | egrep -o "errors:.*"` `$IFCONFIG $IF | grep -o "collisions:."`; do 
+		OUT_ERR[$varnumber]=`echo $i | cut -d ":" -f 2`
+		varnumber=`expr $varnumber + 1`
+	done
+              
+else
+	echo "Couldn't execute anything. Are you sure the command is available?"
+	exit 3
+	
+fi
+}
+
+getValues  
+
+
+# collect gathered info in a readable format
+STATUS="IN => errors: ${IN_ERR[0]} drops: ${IN_ERR[1]} overruns: ${IN_ERR[2]} frame: ${IN_ERR[3]}  OUT => errors: ${OUT_ERR[0]} drops: ${OUT_ERR[1]} overruns: ${OUT_ERR[2]} carrier loss: ${OUT_ERR[3]} collisions: ${OUT_ERR[4]}"
+
+# determine the status based on $RESULT var
+RESULT=0
+
+for i in ${IN_ERR[*]} ${OUT_ERR[*]}; do
+         if [ $i -gt 0 ]; then
+                 RESULT=`expr $RESULT + 1`
+         fi
+done
+
+
+# statuses
+
+# STATUS OK
+if [ $RESULT -eq 0 ]; then
+  EXITSTATUS=0       
+
+# STATUS WARNING
+elif [ $RESULT -eq 1 ]; then
+  EXITSTATUS=1
+
+else
+
+# STATUS CRITICAL
+ if [ $RESULT -gt 1 ]; then
+  EXITSTATUS=2
+ fi
+fi
+
+# stdout message
+echo "$STATUS"
+
+# retval for nagios
+exit $EXITSTATUS

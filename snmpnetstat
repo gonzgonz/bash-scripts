@@ -1,0 +1,23 @@
+#!/usr/bin/python
+import os
+
+cmd = "netstat -anlt"
+
+statuscounts = {
+    'established':0,
+    'listen':0,
+    'time_wait':0,
+    'time_close':0,
+    'fin_wait1':0,
+    'fin_wait2':0,
+    'syn_sent':0,
+    'syn_recv':0,
+    'close_wait':0
+}
+for line in os.popen(cmd):
+    if line:
+        status = line.strip().split()[-1].lower()
+        if status in statuscounts:
+            statuscounts[status] += 1
+
+print "established:%(established)d listen:%(listen)d timewait:%(time_wait)d timeclose:%(time_close)d finwait1:%(fin_wait1)d finwait2:%(fin_wait2)d synsent:%(syn_sent)d synreceived:%(syn_recv)d closewait:%(close_wait)d" % statuscounts

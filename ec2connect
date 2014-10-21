@@ -1,0 +1,42 @@
+#!/bin/bash
+# Simple script for ssh connection to Ec2 
+
+# the path where .pem keys are located
+PEMS_DIR='/home/gonzo/Dropbox/Documents/pems'
+
+
+PS3='Select your option:'
+options=("Nagios" "Jenkins" "QA1" "QA2" "Stage2" "StageM" "MONGO_BR_01" "MONGO_02" "MONGO_03" "MP_ENGINE" "Quit")
+select opt in "${options[@]}"
+do
+
+  case "$opt" in
+       
+        Nagios) ssh -i $PEMS_DIR/qanode01.pem root@ec2-50-1sadsadsadsa
+	    ;;
+       Jenkins) ssh -i $PEMS_DIR/jenkins.pem root@ec2-54-19asdsadasdasdas
+ 	    ;;
+           QA1) ssh -i $PEMS_DIR/gonzo gonzo@qa01asdasdasdas
+	    ;;
+           QA2) ssh -i $PEMS_DIR/gonzo gonzo@ec2-1asdasdasdasdsa
+	    ;;
+           Stage2) ssh -i $PEMS_DIR/qanode01.pem ec2-user@ec2sadasdasdas
+            ;;
+           StageM) ssh -i $PEMS_DIR/qanode01.pem ec2-user@ec2-23-20sadasdasdasdsad
+            ;;
+           MONGO_BR_01) ssh -i $PEMS_DIR/gonzo gonzo@ec2-54-83-178asdsadasd
+            ;;
+           MONGO_02) ssh -i $PEMS_DIR/gonzo gonzo@ec2-54-82-199asdasdasdasdas
+            ;;
+           MONGO_03) ssh -i $PEMS_DIR/gonzo gonzo@ec2-54-234-asdasdasdasdasdas
+            ;;
+           MP_ENGINE) ssh -i $PEMS_DIR/qanode01.pem root@servesadasdasdasdsad
+            ;;
+          Quit) echo "Bye :-)"
+            break
+            ;;
+        *) echo 'Invalid option. Please try again...';;
+esac
+echo "Bye :-)"
+break
+done
