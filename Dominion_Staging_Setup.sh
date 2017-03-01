@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# run a list of commands to set up staging environment
+# run a list of commands to set up staging environment # Private key included is obviously INVALID!
 
 DOMINION_HOST=wsg0dsdasdasdasd.com
 
